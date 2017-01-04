@@ -1,0 +1,26 @@
+{
+       "mappings": {
+	       "item": {
+		       "_all":	{ "enabled": false },
+		       "properties": {
+			       "name":	{ 
+				       "type": "text",
+				       "index_analyzer": "NGramAnalyzer",
+				       "search_analyzer": "standard"
+			       },
+			       "group":	{ 
+				       "type": "text",
+				       "index_analyzer": "NGramAnalyzer"
+			       },
+			       "source": { 
+				       "type": "text",
+				       "analyzer": "item_search"
+			       },
+			       "ID": { 
+				       "type": "text",
+				       "analyzer": "item_search"
+			       }
+		       }
+	       }
+       }	
+}
