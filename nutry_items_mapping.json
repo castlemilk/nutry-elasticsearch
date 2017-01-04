@@ -5,20 +5,49 @@
 		       "properties": {
 			       "name":	{ 
 				       "type": "text",
-				       "index_analyzer": "NGramAnalyzer",
-				       "search_analyzer": "standard"
+				       "analyzer": "english",
+				       "copy_to": "full_description",
+				       "fields": {
+					       "std": {
+						       "type": "text",
+						       "analyzer": "standard"
+					       },
+					       "ngram": {
+						       "type": "text",
+						       "analyzer": "NGramAnalyzer",
+						       "search_analyzer": "standard"
+					       },
+					       "shingles": {
+						       "type": "text",
+						       "analyzer": "ShingleAnalyzer"
+					       }
+
+				       }
+
 			       },
 			       "group":	{ 
 				       "type": "text",
-				       "index_analyzer": "NGramAnalyzer"
+				       "analyzer": "english",
+				       "fields": {
+					       "std": {
+						       "type": "text",
+						       "analyzer": "standard"
+					       },
+					       "ngram": {
+						       "type": "text",
+						       "analyzer": "NGramAnalyzer",
+						       "search_analyzer": "standard"
+					       }
+				       }
+			       },
+			       "full_description": {
+				       "type": "text"
 			       },
 			       "source": { 
-				       "type": "text",
-				       "analyzer": "item_search"
+				       "type": "text"
 			       },
 			       "ID": { 
-				       "type": "text",
-				       "analyzer": "item_search"
+				       "type": "text"
 			       }
 		       }
 	       }

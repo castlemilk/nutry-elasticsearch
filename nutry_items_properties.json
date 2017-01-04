@@ -8,8 +8,15 @@
 			"NGramFilter": {
 				"type": "edgeNGram",
 				"min_gram": 1,
-				"max_gram": 60
+				"max_gram": 20
+			},
+			"ShingleFilter": {
+				"type":	"shingle",
+				"min_shingle_size": 2,
+				"max_shingle_size": 2,
+				"output_unigrams": false
 			}
+
 		},
 		"analyzer": {
 			"item_search": {
@@ -18,8 +25,19 @@
 			"NGramAnalyzer": {
 				"type": "custom",
 				"tokenizer": "standard",
-				"filter": [ "lowercase", "NGramFilter" ]
-			} 
+				"filter": [ 
+					"lowercase", 
+					"NGramFilter" 
+				]
+			},
+			"ShingleAnalyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"lowercase",
+					"ShingleFilter"
+				]
+			}
 		}
 	}
 }	

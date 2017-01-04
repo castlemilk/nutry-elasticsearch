@@ -1,4 +1,5 @@
 from requests import Request, Session
+from requests.auth import HTTPBasicAuth
 import json
 
 def load_mapping(mapping_file_path):
@@ -33,6 +34,8 @@ def generate_index_create_request(url, mapping, index_properties):
     '''
     props = lambda x: index_properties[x] if index_properties.get(x) else None
     headers = {}
+    headers['content-type'] = 'application/json'
+    headers['Accept'] = 'application/json'
     body = {}
     body["settings"] = {}
     if index_properties:
@@ -45,7 +48,7 @@ def generate_index_create_request(url, mapping, index_properties):
     if mapping:
         body["mappings"] = mapping["mappings"]
     body = json.dumps(body)
-    request = Request('POST', url, data=body, headers=headers)
+    request = Request('PUT', url, data=body, headers=headers)
     return request
 
 
@@ -59,38 +62,42 @@ def create_index(endpoint,
     settings
     '''
     session = Session()
+    session.auth = ('elastic', 'changeme')
     mapping = load_mapping(mapping_file_path)
     index_properties = load_index_properties(index_properties_file_path)
     url = '{}/{}?pretty'.format(endpoint, index_name)
     request = generate_index_create_request(url, mapping, index_properties)
-    request_prepared = request.prepare()
-    #response = session.send(request_prepared)
-    response = None
+    prepped = session.prepare_request(request)
+    response = session.send(prepped)
+    print(prepped.headers)
     if response:
-        return response
+        return (request, response)
     else:
-        return request
+        return (request, response)
 
 
 def main():
     endpoint = 'http://localhost:9200'
     index_name = 'nutry_items'
-    mapping_file = 'nutry_items_mapping.json.props'
-    properties_file = 'nutry_items_properties.json.props'
-    resp = create_index(endpoint, index_name, mapping_file, properties_file)
-    if isinstance(resp, Request):
-        print('-----Request--------')
-        print('Request url: {}'.format(resp.url))
-        print('Reqest body:')
-        print(json.dumps(
-            json.loads(resp.data),
+    mapping_file = 'nutry_items_mapping.json'
+    properties_file = 'nutry_items_properties.json'
+    request, response = create_index(endpoint, index_name, mapping_file, properties_file)
+    print('-----Request--------')
+    print('Request url: {}'.format(request.url))
+    print('Request headers:')
+    print(request.headers)
+    print('Reqest body:')
+    print(json.dumps(
+            json.loads(request.data),
             sort_keys=True,
             indent=4))
-    else:
-        print('-----Response--------')
-        print('Response code: {}'.format(resp.status_code))
-        print('Response body:\n{}'.format(resp.text))
+    print('-----Response--------')
 
+    print('Response code: {}'.format(response.status_code))
+    print('Response headers: ')
+    print(response.headers)
+    print('Response body:')
+    print(response.text)
 
 if __name__=='__main__':
     main()
