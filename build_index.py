@@ -1,6 +1,9 @@
 from requests import Request, Session
 from requests.auth import HTTPBasicAuth
 import json
+import os
+import sys
+from tqdm import tqdm
 
 def load_mapping(mapping_file_path):
     '''
@@ -75,29 +78,96 @@ def create_index(endpoint,
     else:
         return (request, response)
 
+def load_data(data_file_path):
+    '''
+    Get data file pointer
+    '''
+    index_properties_dict = {}
+    try:
+        fp = open(data_file_path, 'r')
+        if fp:
+            file_size = os.path.getsize(data_file_path)
+        else:
+            file_size = none
+        return (file_size, fp)
+    except IOError:
+        print('specified data file not found')
+        return (None, None)
+
+def upload_data(endpoint, index_name, data_file_path):
+    '''
+    Upload a data file to the given endpoint and index
+    Elasticsearch requires a serialised/serialisable document for
+    indexing. So we cannot send a raw data file unless we send it in
+    one go
+    TODO: parallelalize upload process
+    '''
+    credentials = ('elastic', 'changeme')
+    CHUNK_SIZE = 1024
+    session = Session()
+    session.auth = credentials
+    file_size, fp = load_data(data_file_path)
+    if not fp:
+        return None
+    url = '{}/{}/{}'.format(endpoint, index_name, 'item')
+    for document in tqdm(fp.readlines()):
+        request = Request('POST',
+                          url,
+                          auth=credentials,
+                          data=json.loads(json.dumps(document)))
+        response = session.send(request.prepare())
+        if not response.ok:
+            exit_on_error(request=request,response=response)
+def delete_data(endpoint, index_name, credentials):
+    '''
+    Clear all indexed data from Elasticsearch
+    '''
+    url = '{}/{}'.format(endpoint, index_name)
+    session = Session()
+    request = Request('DELETE', url, auth=credentials).prepare()
+    response = session.send(request)
+    if response.ok:
+        return True
+    else:
+        return response
+
+
+def exit_on_error(request=None,response=None):
+    if request!=None:
+        print("Reqest URL: {0}".format(request.url, indent=4))
+        print("Reqest Headers: {0}".format(request.headers, indent=4))
+    if response!=None:
+        print("Status Code {0}".format(response.status_code))
+        print("Response: {0}".format(json.dumps(response.json(), indent=4)))
+    sys.exit(1)
 
 def main():
     endpoint = 'http://localhost:9200'
     index_name = 'nutry_items'
     mapping_file = 'nutry_items_mapping.json'
     properties_file = 'nutry_items_properties.json'
-    request, response = create_index(endpoint, index_name, mapping_file, properties_file)
-    print('-----Request--------')
-    print('Request url: {}'.format(request.url))
-    print('Request headers:')
-    print(request.headers)
-    print('Reqest body:')
-    print(json.dumps(
+    request, response = (None, None)
+    #request, response = create_index(endpoint, index_name, mapping_file, properties_file)
+    if request:
+        print('-----Request--------')
+        print('Request url: {}'.format(request.url))
+        print('Request headers:')
+        print(request.headers)
+        print('Reqest body:')
+        print(json.dumps(
             json.loads(request.data),
             sort_keys=True,
             indent=4))
-    print('-----Response--------')
+    if response:
+        print('-----Response--------')
 
-    print('Response code: {}'.format(response.status_code))
-    print('Response headers: ')
-    print(response.headers)
-    print('Response body:')
-    print(response.text)
+        print('Response code: {}'.format(response.status_code))
+        print('Response headers: ')
+        print(response.headers)
+        print('Response body:')
+        print(response.text)
+    data_file_path = 'items_flat.json.dumps'
+    upload_data(endpoint, index_name, data_file_path)
 
 if __name__=='__main__':
     main()
