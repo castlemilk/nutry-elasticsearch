@@ -5,7 +5,8 @@ services:
     environment:
       SERVER_NAME: kibana.dev.nutry
       ELASTICSEARCH_URL: http://elasticsearch1:9200
-
+    volumes:
+      - ${PWD}/config/kibana.yml:/usr/share/kibana/config/kibana.yml
     links:
       - elasticsearch1
     ports:
