@@ -8,6 +8,6 @@
 #	&
 ELASTIC_CONFIG_PATH=`pwd`/config
 echo $ELASTIC_CONFIG_PATH
-docker-compose up
+docker-compose up -d
 
 
